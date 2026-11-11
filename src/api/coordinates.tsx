@@ -2,6 +2,7 @@ import { createPortal, useFrame, useThree } from "@react-three/fiber";
 import { PropsWithChildren, memo, useLayoutEffect, useRef, useState } from "react";
 import { Matrix4Tuple, PerspectiveCamera, Scene } from "three";
 import { syncCamera } from "../core/sync-camera";
+import { useEllipsoid } from "../core/use-coords";
 import { useCoordsToMatrix } from "../core/use-coords-to-matrix";
 import { R3M, useR3M } from "../core/use-r3m";
 
@@ -19,8 +20,10 @@ export const Coordinates = memo<CoordinatesProps>(({
 
   const r3m = useR3M();
 
+  const ellipsoid = useEllipsoid();
+
   const origin = useCoordsToMatrix({
-    latitude, longitude, altitude, fromLngLat: r3m.fromLngLat,
+    latitude, longitude, altitude, ellipsoid, fromLngLat: r3m.fromLngLat,
   });
 
 

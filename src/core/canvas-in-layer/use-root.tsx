@@ -10,7 +10,7 @@ import { initR3M } from "../use-r3m";
 export function useRoot(
   fromLngLat: FromLngLat,
   map: MapInstance,
-  { frameloop, longitude, latitude, altitude, ...props }: CanvasProps
+  { frameloop, longitude, latitude, altitude, ellipsoid, ...props }: CanvasProps
 ) {
 
   const [{ root, useThree, canvas, r3m }] = useState(() => {
@@ -49,7 +49,7 @@ export function useRoot(
     const store = _roots.get(canvas)!.store; // eslint-disable-line @typescript-eslint/no-non-null-assertion
 
     const r3m = initR3M({ map, fromLngLat, store });
-    setCoords(store, {longitude, latitude, altitude});
+    setCoords(store, {longitude, latitude, altitude, ellipsoid});
 
     if (frameloop === 'demand') {
       store.setState({
@@ -90,7 +90,7 @@ export function useRoot(
     root.unmount();
   })
 
-  useSetRootCoords(useThree, {longitude, latitude, altitude});
+  useSetRootCoords(useThree, {longitude, latitude, altitude, ellipsoid});
 
   // on `frameloop` change
   useEffect(() => {
