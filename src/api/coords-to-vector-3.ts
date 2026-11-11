@@ -1,6 +1,6 @@
 import { MathUtils, Vector3Tuple } from 'three';
-import { Coords } from './coords';
-import { earthRadius } from "../core/earth-radius";
+import { Coords, CoordsOptions } from './coords';
+import { radiiOfCurvature } from "../core/radii-of-curvature";
 
 
 const mercatorScaleLookup: { [key: number]: number } = {};
@@ -23,12 +23,13 @@ export function averageMercatorScale(originLat: number, pointLat: number, steps 
   return totalScale / (steps + 1);
 }
 
-export function coordsToVector3(point: Coords, origin: Coords): Vector3Tuple {
+export function coordsToVector3(point: Coords, origin: Coords, options?: CoordsOptions): Vector3Tuple {
   const latitudeDiff = (point.latitude - origin.latitude) * MathUtils.DEG2RAD;
   const longitudeDiff = (point.longitude - origin.longitude) * MathUtils.DEG2RAD;
   const altitudeDiff = (point.altitude || 0) - (origin.altitude || 0);
+  const radii = radiiOfCurvature(origin.latitude, options?.ellipsoid);
 
-  const x = longitudeDiff * earthRadius * Math.cos(origin.latitude * MathUtils.DEG2RAD);
+  const x = longitudeDiff * radii.east * Math.cos(origin.latitude * MathUtils.DEG2RAD);
   const y = altitudeDiff;
 
   // dynamic step size based on latitude difference. calculate the mercator unit scale at origin
@@ -36,6 +37,6 @@ export function coordsToVector3(point: Coords, origin: Coords): Vector3Tuple {
   const steps = Math.ceil(Math.abs(point.latitude - origin.latitude)) * 100 + 1;
   const avgScale = averageMercatorScale(origin.latitude, point.latitude, steps);
 
-  const z = ((-latitudeDiff * earthRadius) / getMercatorScale(origin.latitude)) * avgScale;
+  const z = ((-latitudeDiff * radii.north) / getMercatorScale(origin.latitude)) * avgScale;
   return [x, y, z] as Vector3Tuple;
 }

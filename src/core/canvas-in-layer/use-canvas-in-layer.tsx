@@ -7,10 +7,10 @@ import { useRoot } from "./use-root";
 /** get all the properties that you need to render as a map `<Layer>` */
 export function useCanvasInLayer(props: CanvasProps,fromLngLat: FromLngLat, map: MapInstance) {
 
-  const {latitude, longitude, altitude, frameloop } = props;
+  const {latitude, longitude, altitude, frameloop, ellipsoid } = props;
 
     const origin = useCoordsToMatrix({
-      latitude, longitude, altitude, fromLngLat,
+      latitude, longitude, altitude, fromLngLat, ellipsoid,
     });
 
     const { onAdd, onRemove, useThree, r3m } = useRoot(fromLngLat, map, props);

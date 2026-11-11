@@ -142,6 +142,7 @@ It shares most of the props from R3F `<Canvas>`, so you can check them directly 
 | latitude  | The latitude coordinate where to add the scene.  |            |
 | longitude | The longitude coordinate where to add the scene. |            |
 | altitude  | The altitude coordinate where to add the scene.  | `0`        |
+| ellipsoid | Scene x and z are meters on the WGS84 ellipsoid. | `false`    |
 | frameloop | Render mode: `"always"`, `"demand"`.             | `"always"` |
 | overlay   | Render on a separated canvas.                    | `false`    |
 
@@ -156,6 +157,24 @@ But it comes with some caveats:
 
 - ThreeJS will always render on top, as this is now a separated canvas and doesn't have access to the map depth buffer.
 - `react-postprocessing` will also not work if you also use `<Coordinates>` components.
+
+**About `ellipsoid`**
+
+By default, a meter of the scene is the map's own meter, which Mapbox and MapLibre take on a sphere of 6,371,008.8 m, not on the Earth's ellipsoid. On the ground it is 0.3 % too long east-west at 50°N, and up to 0.56 % off elsewhere, depending on latitude and direction, so lengths and areas measured in the scene don't match the ground.
+
+With `ellipsoid`, the scene's x (east) and z (south) axes are in meters on the WGS84 ellipsoid at the canvas origin, so a 20 m wall in the scene is 20 m long on the ground. The y axis (up) keeps the map's meters, in which the map draws heights.
+
+```tsx
+<Canvas latitude={51} longitude={0} ellipsoid>
+  <mesh position={[0, 5, 0]}>
+    <boxGeometry args={[20, 10, 20]} /> {/* 20 m × 20 m on the ground */}
+  </mesh>
+</Canvas>
+```
+
+- `<Coordinates>` and `<NearCoordinates>` follow the `<Canvas>`.
+- Pass `{ ellipsoid: true }` to `coordsToVector3` and `vector3ToCoords` when you use them with the scene.
+- The scene is exact at the origin. Away from it, Web Mercator's scale changes with latitude, with or without `ellipsoid`: at 60°N by 0.003 % every 100 m north or south.
 
 #### Render Props removed from `@react-three/fiber`
 
@@ -228,10 +247,11 @@ This utility function converts geographic coordinates into a `Vector3Tuple`, whi
 Similar to `NearCoordinates`, remember that this only updates positions (translation) but that scale is not taken into account, which has an important factor at very long distances (country level).
 
 
-| Parameter        | Description                                                     |
-| ---------------- | --------------------------------------------------------------- |
-| `point: Coords`  | The geographic coordinates of the point to convert.             |
-| `origin: Coords` | The geographic coordinates used as the origin for calculations. |
+| Parameter                 | Description                                                     |
+| ------------------------- | --------------------------------------------------------------- |
+| `point: Coords`           | The geographic coordinates of the point to convert.             |
+| `origin: Coords`          | The geographic coordinates used as the origin for calculations. |
+| `options?: CoordsOptions` | Use `{ ellipsoid: true }` with a `<Canvas ellipsoid>`.          |
 
 Returns a `Vector3Tuple` representing the 3D position of the point relative to the origin.
 
@@ -245,9 +265,10 @@ It is the inverse of `coordsToVector3` but it does not have a good level of prec
 
 Recommended to use at city level distances, but margin errors will be noticeable at country level distances.
 
-| Parameter                | Description                                                     |
-| ------------------------ | --------------------------------------------------------------- |
-| `position: Vector3Tuple` | The 3D vector to convert back into geographic coordinates.      |
-| `origin: Coords`         | The geographic coordinates used as the origin for calculations. |
+| Parameter                 | Description                                                     |
+| ------------------------- | --------------------------------------------------------------- |
+| `position: Vector3Tuple`  | The 3D vector to convert back into geographic coordinates.      |
+| `origin: Coords`          | The geographic coordinates used as the origin for calculations. |
+| `options?: CoordsOptions` | Use `{ ellipsoid: true }` with a `<Canvas ellipsoid>`.          |
 
 Returns a `Coords` object representing the geographic coordinates of the point relative to the origin.
